@@ -1,0 +1,1 @@
+osm/nord-est-latest.osm.pbf	https://download.geofabrik.de/europe/italy/nord-est-latest.osm.pbf

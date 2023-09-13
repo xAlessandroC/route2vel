@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Web UI</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='js/interact.js') }}"></script>
+</head>
+<body>
+    <style>
+        body {
+            background-color: #2c2c2c;
+            color: #fdfdfd;
+        }
+
+        #result-table * {
+            font-size: 12px;
+        }
+
+        #result-image img {
+            width: 65%;
+        }
+    </style>
+    <h1>Estrazione dati percorso</h1>
+    <form id="location-form">
+        <p>È possibile inserire la posizione come nomi di luogo o coordinate.</p>
+
+        <label for="start_location">Luogo iniziale</label>
+        <input type="text" id="start_location" name="start_location" required><br><br>
+        
+        <label for="end_location">Luogo finale</label>
+        <input type="text" id="end_location" name="end_location" required><br><br>
+        
+        <label for="sampling_distance">Distanza di campionamento (m)</label>
+        <input type="number" id="sampling_distance" name="sampling_distance" value="5" required><br><br>
+        
+        <label for="csv_path">CSV Save Path</label>
+        <input type="text" id="csv_path" name="csv_path" value="route_output_full.csv" required>
+        <br><br>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    <h2>Risultato:</h2>
+    <div id="result"></div>
+    <h3>Anteprima percorso</h3>
+    <div id="result-image"></div>
+    <h3>Campione dati percorso</h3>
+    <div id="result-table"></div>
+</body>
+</html>

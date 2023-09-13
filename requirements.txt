@@ -1,0 +1,16 @@
+# includes requirements for notebooks and webui
+ipykernel
+geopandas
+pandas
+pyproj
+# later versions had issues in creating gdf from route, 
+# if fixing the version leads to different issues later
+# you can try removing the fixed version, might have been
+# fixed later
+osmnx==1.6.0
+shapely
+routingpy
+contextily
+scipy
+flask
+Flask-SocketIO

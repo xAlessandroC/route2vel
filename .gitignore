@@ -1,0 +1,14 @@
+**/cache/**
+*.graphml
+__pycache__/**
+*.pyc
+route2vel.json
+valhalla_files/
+osrm_files/
+*.shp.zip
+*.osm.pbf
+*.pickle
+docs/*.pdf
+route_output_full.csv
+.venv/**
+resources/contextily_cache/**
