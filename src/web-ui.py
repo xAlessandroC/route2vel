@@ -119,7 +119,7 @@ if __name__ == '__main__':
     route2vel.load_config(root_dir)
     init_cx_cache()
     matplotlib.use('agg')
-    debug = True
+    debug = False
     if not debug:
         webbrowser.open('http://localhost:5000')
     socketio.run(app, debug=debug, port=8080)
