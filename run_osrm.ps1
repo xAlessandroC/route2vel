@@ -1,5 +1,8 @@
 $MAP_NAME = "nord-est-latest.osm.pbf"
 
+$scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Definition
+Set-Location $scriptDirectory
+
 if (-not(Test-Path -Path "${PWD}/osrm_files" -PathType Container)) {
     New-Item "${PWD}/osrm_files" -ItemType Directory -ea 0
 }
