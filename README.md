@@ -16,4 +16,5 @@ might take some time, as the program downloads map data.
 
 #### Notes
 
-Ported from private repo, which is why it was initialized already mostly made.
+- Ported from private repo, which is why it was initialized already mostly made.
+- If there are issues during the install, try also deleting the created docker containers (4 containers starting with OSRM) before restarting
