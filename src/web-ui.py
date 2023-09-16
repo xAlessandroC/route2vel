@@ -115,11 +115,15 @@ def init_cx_cache():
     cx.set_cache_dir(cx_cache_path)
     # delete old stuff
 
-if __name__ == '__main__':
+def main():
     route2vel.load_config(root_dir)
     init_cx_cache()
     matplotlib.use('agg')
     debug = False
+    port = 8080
     if not debug:
-        webbrowser.open('http://localhost:5000')
-    socketio.run(app, debug=debug, port=8080)
+        webbrowser.open(f'http://localhost:{port}')
+    socketio.run(app, debug=debug, port=port)
+
+if __name__ == '__main__':
+    main()
