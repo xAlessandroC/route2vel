@@ -9,6 +9,8 @@ Running the WebUI requires [Docker](https://www.docker.com/) and Python 3 to be 
 You can install [Docker Desktop](https://www.docker.com/products/docker-desktop/) on Windows or the `docker` package in most Linux distributions. The launch script will download and locally setup
 all other dependencies.
 
+Note that it requires approximately 3GB of free space!
+
 The WebUI allows you to specify a starting and arrival location, and will compute the route. Then it will display it, and save the interpolated geometry data in a CSV at the path specified in the WebUI. The first launch
 might take some time, as the program downloads map data.
 
