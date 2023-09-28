@@ -3,9 +3,11 @@ import json
 import os
 from .utils import logdebug
 
+module_parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+
 DEFAULT_CONFIG = {
-    'resources_dir': 'resources',
-    'graphs_dir': 'resources/graph',
+    'resources_dir': f'{module_parent_dir}/resources',
+    'graphs_dir': f'{module_parent_dir}/resources/graph',
     'ele_method': 'opentopodata',
     'ele_api_key': '',
     'routing_method': 'graphhopper',
@@ -18,7 +20,7 @@ cfg = DEFAULT_CONFIG.copy()
 
 _loaded = False
 
-def load_config(path = ".", file:TextIOWrapper=None, force=False, create_if_missing=True):
+def load_config(path = module_parent_dir, file:TextIOWrapper=None, force=False, create_if_missing=True):
     global cfg
     global _loaded
 

@@ -12,3 +12,5 @@ docs/*.pdf
 route_output_full.csv
 .venv/**
 resources/contextily_cache/**
+resources/md5/**
+resources/**.tmp

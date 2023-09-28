@@ -1,8 +1,5 @@
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$venvDir = '.venv'
-
-# Change to the script's directory
-Set-Location $scriptDirectory
+$venvDir = "$scriptDirectory/.venv"
 
 # Create a virtual environment if it doesn't exist
 if (-Not (Test-Path -Path $venvDir -PathType Container)) {
@@ -14,12 +11,10 @@ Write-Host "Activating venv..."
 & "$venvDir\Scripts\Activate.ps1"
 
 Write-Host "Creating and running containers..."
-& ".\run_osrm.ps1"
+& "$scriptDirectory\run_osrm.ps1"
 
 # Install dependencies using pip if requirements.txt exists
 Write-Host "Checking requirements"
-pip install -r "requirements.txt" | Select-String -NotMatch -Pattern "Requirement already satisfied"
+pip install -r "$scriptDirectory\requirements.txt" | Select-String -NotMatch -Pattern "Requirement already satisfied" | Write-Host
 
-Set-Location src
-python web-ui.py
-Set-Location ..
+python $scriptDirectory/src/web-ui.py

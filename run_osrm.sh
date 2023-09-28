@@ -16,6 +16,7 @@ if [ ! -f "$MAP_PATH" ]; then
     wget -O "$MAP_PATH" "http://download.geofabrik.de/europe/italy/$MAP_NAME"
     echo "Downloaded $MAP_NAME"
 else
+    # todo: replace date modified check with MD5 check
     last_modified=$(date -r "$MAP_PATH" +%s)
     current_date=$(date +%s)
     days_difference=$(( (current_date - last_modified) / 86400 ))
