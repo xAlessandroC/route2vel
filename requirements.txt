@@ -14,3 +14,4 @@ contextily
 scipy
 flask
 Flask-SocketIO
+tqdm

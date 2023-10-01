@@ -52,10 +52,7 @@ def run_path_calc(start_location: str, end_location: str, sampling_distance: int
     
     print("Calculated route, starting interpolation...")
     
-    interp_args = {}
-    if sampling_distance is not None:
-        interp_args['distance_treshold'] = sampling_distance
-    interp_dir = route2vel.interp_from_route(route_dir, **interp_args)
+    interp_dir = route2vel.interp_from_route(route_dir)
     
     socketio.emit('interp_gdf', {
         'table': interp_dir.split_gdf.head().to_html()

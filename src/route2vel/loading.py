@@ -9,6 +9,12 @@ import geopandas as gpd
 from .config import cfg
 from .utils import logdebug, extract_connections_sequence
 import pickle
+from warnings import warn
+import numpy as np
+from tqdm import tqdm
+
+# used in rework on add elevation function
+from osmnx.elevation import _downloader, InsufficientResponseError, _elevation_request
 
 ROAD_MAXSPEED = {
     'it': {
@@ -214,13 +220,16 @@ def add_elevation(graph: nx.MultiDiGraph, method:str=None, api_key:str=None):
     t1 = time.time()
     try:
         if method == 'google':
-            graph = ox.add_node_elevations_google(
+            graph = _add_node_elevations_google(
                 graph, 
                 api_key=api_key,
             )
         elif method == 'opentopodata':
             # api key is unused here
-            graph = ox.add_node_elevations_google(
+            # As seen [here](https://www.opentopodata.org/#public-api), the
+            # open topo data Public API is restricted to 1call/second, 100 locations/call,
+            # 1000 calls/day
+            graph = _add_node_elevations_google(
                 graph, 
                 url_template='https://api.opentopodata.org/v1/aster30m?locations={}&key={}', 
                 max_locations_per_batch=100,
@@ -233,6 +242,107 @@ def add_elevation(graph: nx.MultiDiGraph, method:str=None, api_key:str=None):
     print(f"Added elevation in {t2 - t1:.2f}s")
     return graph
    
+def _add_node_elevations_google(
+    G,
+    api_key=None,
+    max_locations_per_batch=350,
+    pause=0,
+    precision=None,
+    url_template="https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
+    # route2vel: added by us
+    use_tqdm=True,
+):  # pragma: no cover
+    """
+    Modified version of the osmnx method to show a progress bar with tqdm, as this is usually the long part.
+
+    Original pydoc below.
+    ---
+    Add `elevation` (meters) attribute to each node using a web service.
+
+    By default, this uses the Google Maps Elevation API but you can optionally
+    use an equivalent API with the same interface and response format, such as
+    Open Topo Data. The Google Maps Elevation API requires an API key but
+    other providers may not.
+
+    For a free local alternative see the `add_node_elevations_raster`
+    function. See also the `add_edge_grades` function.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    api_key : string
+        a valid API key, can be None if the API does not require a key
+    max_locations_per_batch : int
+        max number of coordinate pairs to submit in each API call (if this is
+        too high, the server will reject the request because its character
+        limit exceeds the max allowed)
+    pause : float
+        time to pause between API calls, which can be increased if you get
+        rate limited
+    precision : int
+        deprecated, do not use
+    url_template : string
+        a URL string template for the API endpoint, containing exactly two
+        parameters: `locations` and `key`; for example, for Open Topo Data:
+        `"https://api.opentopodata.org/v1/aster30m?locations={}&key={}"`
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with node elevation attributes
+    """
+    if precision is None:
+        precision = 3
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
+    # make a pandas series of all the nodes' coordinates as 'lat,lng'
+    # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
+    # in more locations per API call
+    node_points = pd.Series(
+        {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
+    )
+    n_calls = int(np.ceil(len(node_points) / max_locations_per_batch))
+    domain = _downloader._hostname_from_url(url_template)
+    ox.utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
+
+    # break the series of coordinates into chunks of size max_locations_per_batch
+    # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
+    results = []
+
+    node_range = range(0, len(node_points), max_locations_per_batch)
+    if use_tqdm:
+        node_range = tqdm(node_range)
+
+    for i in node_range:
+        chunk = node_points.iloc[i : i + max_locations_per_batch]
+        locations = "|".join(chunk)
+        url = url_template.format(locations, api_key)
+
+        # download and append these elevation results to list of all results
+        response_json = _elevation_request(url, pause)
+        results.extend(response_json["results"])
+
+    # sanity check that all our vectors have the same number of elements
+    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
+    ox.utils.log(msg)
+    if not (len(results) == len(G) == len(node_points)):
+        err_msg = f"{msg}\n{response_json}"
+        raise InsufficientResponseError(err_msg)
+
+    # add elevation as an attribute to the nodes
+    df = pd.DataFrame(node_points, columns=["node_points"])
+    df["elevation"] = [result["elevation"] for result in results]
+    df["elevation"] = df["elevation"].round(precision)
+    nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
+    ox.utils.log(f"Added elevation data from {domain!r} to all nodes.")
+
+    return G
+
 WAY_EQUAL_ATTRS = ['oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'bridge', 'access', 'junction', 'service', 'tunnel', 'width']
 
 def compress_edges_dataframe(edges_df: gpd.GeoDataFrame, nodes_df: gpd.GeoDataFrame = None, return_geometry=True, drop_complex_shapes=False) -> gpd.GeoDataFrame:

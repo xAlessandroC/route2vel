@@ -22,3 +22,11 @@ will take some time, as the program downloads map data.
 
 - Ported from private repo, which is why it was initialized already mostly made.
 - If there are issues during the install, try also deleting the created docker containers (4 containers starting with OSRM) before restarting. You can easily do this using the *cleanup-osrm.ps1* (.sh is yet todo) to do this more quickly.
+
+---
+
+#### Possible additions
+
+Ideas on possible improvements that are not implemented (yet).
+- Directly using the local .osm.pbf file to load graphs instead of the Overpass API, now that osmnx supports it. Would help in both avoiding API calls and having OSRM and graph data always in sync.
+- Locally host Open Topo Data (as seen [in its doc](https://www.opentopodata.org/)) instead of using its free API. Might not be necessary depending on the usecase, in case a paid API is able to be used.
