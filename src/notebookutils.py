@@ -10,7 +10,7 @@ import scipy
 def x_to_colors(X, cmap):
     return [matplotlib.colormaps.get_cmap(cmap)(x / len(X)) for x in range(len(X))]
 
-def make_better_barh(ax, X, Y, title: str = None, cmap: str = None, pct = False, **kwargs):
+def make_better_barh(ax, X, Y, title: str = None, cmap: str = None, pct = False, gridcolor='grey', numcolor='lightgray', **kwargs):
     if cmap:
         colors = x_to_colors(X, cmap)
         kwargs['color'] = colors
@@ -26,7 +26,7 @@ def make_better_barh(ax, X, Y, title: str = None, cmap: str = None, pct = False,
     ax.xaxis.set_tick_params(pad = 5)
     ax.yaxis.set_tick_params(pad = 10)
     
-    ax.grid(color ='grey',
+    ax.grid(color = gridcolor,
             linestyle ='-.', linewidth = 0.5,
             alpha = 0.2)
     
@@ -37,7 +37,7 @@ def make_better_barh(ax, X, Y, title: str = None, cmap: str = None, pct = False,
                 (i.get_width()+0.75, i.get_y()+i.get_height() / 2),
                 va='center',
                 fontsize = 10, fontweight ='bold',
-                color ='lightgray')
+                color = numcolor)
         
     if title:
         ax.set_title(title)

@@ -3,7 +3,7 @@ import json
 import os
 from .utils import logdebug
 
-module_parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir))
+module_parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir, os.path.pardir))
 
 DEFAULT_CONFIG = {
     'resources_dir': f'{module_parent_dir}/resources',
