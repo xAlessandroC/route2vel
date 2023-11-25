@@ -50,7 +50,13 @@ def make_better_barh(ax, X, Y, title: str = None, cmap: str = None, pct = False,
 
 # zoomin
 # gdf: gdf or list of gdf,kwargs (for plot)
-def display_bounded_shapes(gdf: gpd.GeoDataFrame|list[(gpd.GeoDataFrame,dict)], boundsTl, boundsBr, crs=None, latLong=False, scale=1, bgalpha=1, figsize=(10,10)) -> gpd.GeoDataFrame:
+def display_bounded_shapes(
+    gdf: gpd.GeoDataFrame|list[(gpd.GeoDataFrame,dict)], 
+    boundsTl, boundsBr, 
+    crs=None, latLong=False, scale=1, bgalpha=1,
+    figsize=(10,10),
+    map_source=cx.providers.OpenStreetMap.Mapnik,
+) -> gpd.GeoDataFrame:
     if latLong:
         boundsTl = boundsTl[::-1]
         boundsBr = boundsBr[::-1]
@@ -98,7 +104,7 @@ def display_bounded_shapes(gdf: gpd.GeoDataFrame|list[(gpd.GeoDataFrame,dict)], 
         cropped_gdfs.append(gdf_cropped)
     
     gpd.GeoSeries(shape, crs=crs).plot(ax=ax, facecolor='none', edgecolor='r')
-    cx.add_basemap(ax=ax, crs=crs, source=cx.providers.OpenStreetMap.Mapnik, alpha=bgalpha)
+    cx.add_basemap(ax=ax, crs=crs, source=map_source, alpha=bgalpha)
     plt.show()
 
     return cropped_gdfs
