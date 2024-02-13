@@ -11,7 +11,7 @@ import route2vel
 from enum import Enum
 from route2vel.postprocess import calc_curvature, interp_gdf_to_csv
 
-from tkinter import LabelFrame, Frame, Button, Radiobutton, StringVar
+from tkinter import Entry, Label, LabelFrame, Frame, Button, Radiobutton, StringVar
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -36,6 +36,8 @@ starting_point = None
 ending_point = None
 intermediate_points = []
 active_path = None
+sampling_text = None
+sampling_distance_meters = 5
 
 def submit_task(starting_point, ending_point):
     starting_position = "{}, {}".format(starting_point.position[0], starting_point.position[1])
@@ -50,9 +52,8 @@ def submit_task(starting_point, ending_point):
     print(interp_dir)
     print("-------------------")
     route2vel.utils.debug = True
-    sampling_distance = 5
     sampled_gdf = interp_dir.get_points_with_density(
-        sampling_distance, 
+        int(sampling_text.get()), 
         return_gdf=True,
         in_meters=True, 
         gdf_columns=['base_idx', 'junction', 'speed_kph'] if 'junction' in interp_dir.split_gdf.columns else ['base_idx','speed_kph'] #XXX: fix juncture missing,
@@ -90,6 +91,7 @@ def clearMarkers():
     ending_point = None
     active_path = None
     intermediate_points = []
+    sampling_text.set("{}".format(sampling_distance_meters))
 
     app_state = State.START
     selected.set('start')
@@ -132,6 +134,7 @@ def submit():
 
     if starting_point is not None and ending_point is not None:
         print("Markers selected")
+        print("Sampling distance:", sampling_text.get())
         app_state = State.PATH
         total_points = [starting_point] + intermediate_points + [ending_point]
         total_inverted_geo = []
@@ -142,6 +145,14 @@ def submit():
         
     else:
         print("Markers not selected")
+
+
+def validate_sampling_distance(value):
+    
+    if value.isnumeric() and int(value) > 0:
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":
@@ -162,6 +173,14 @@ if __name__ == "__main__":
     interaction_frame = LabelFrame(root_tk, text = "Point Selection", width=SCREEN_WIDTH, height=SCREEN_HEIGHT*0.4, bg="white", borderwidth = 0, highlightthickness = 0)
     interaction_frame.pack(pady=20, anchor="w")
 
+    sampling_text = StringVar()
+    sampling_text.set("{}".format(sampling_distance_meters))
+    sampling_label = Label(interaction_frame, text="Sampling Distance (m)")
+    sampling_label.grid(row = 1, column = 0)
+    sampling_entry = Entry(interaction_frame, bd = 5, textvariable = sampling_text)
+    sampling_entry.config(validate="all")
+    sampling_entry.grid(row = 1, column = 1)
+
     selected = StringVar()
     r1 = Radiobutton(interaction_frame, text='Start', value='start', variable=selected, command=checkButton)
     r2 = Radiobutton(interaction_frame, text='Intermediate', value='intermediate', variable=selected, command=checkButton)
@@ -172,12 +191,32 @@ if __name__ == "__main__":
     selected.set('start')
 
     button = Button(interaction_frame, text="Clear", command=clearMarkers)
-    button.grid(row=1, column=0, padx=10, pady=10)
+    button.grid(row=2, column=0, padx=10, pady=10)
 
     button = Button(interaction_frame, text="Submit", command=submit)
-    button.grid(row=1, column=1, padx=10, pady=10)
+    button.grid(row=2, column=1, padx=10, pady=10)
 
     interaction_frame.columnconfigure(0, weight=1)
     interaction_frame.rowconfigure((0,1), weight=1)
+
+    # # Text selection
+    # text_frame = LabelFrame(root_tk, text = "Text Selection", width=SCREEN_WIDTH, height=SCREEN_HEIGHT*0.4, bg="white", borderwidth = 0, highlightthickness = 0)
+    # text_frame.pack(pady=20, anchor="w")
+
+    # start_label = Label(text_frame, text="Start Road")
+    # start_label.grid(row = 0, column = 0)
+    # start_entry = Entry(text_frame, bd =5)
+    # start_entry.grid(row = 0, column = 1)
+
+    # end_label = Label(text_frame, text="End Road")
+    # end_label.grid(row = 1, column = 0)
+    # end_entry = Entry(text_frame, bd =5)
+    # end_entry.grid(row = 1, column = 1)
+
+    # button = Button(interaction_frame, text="Clear", command=clearMarkers)
+    # button.grid(row=1, column=0, padx=10, pady=10)
+
+    # button = Button(interaction_frame, text="Submit", command=submit)
+    # button.grid(row=1, column=1, padx=10, pady=10)
 
     root_tk.mainloop()
