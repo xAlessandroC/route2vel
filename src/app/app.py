@@ -13,7 +13,7 @@ from route2vel.postprocess import calc_curvature, interp_gdf_to_csv
 
 from tkinter import Entry, Label, LabelFrame, Frame, Button, Radiobutton, StringVar
 
-SCREEN_WIDTH = 800
+SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 600
 
 START_LATITUDE = 44.494641 
@@ -113,14 +113,14 @@ def left_click_event_on_map(coordinates_tuple):
         map_widget.delete(starting_point)
 
         # Set new starting marker
-        starting_point = map_widget.set_marker(*coordinates_tuple, text="Clickino", marker_color_outside="green", text_color="green", marker_color_circle="green")
+        starting_point = map_widget.set_marker(*coordinates_tuple, text="Start", marker_color_outside="green", text_color="black", marker_color_circle="green")
 
     elif app_state == State.STOP:
         # Delete previous ending marker
         map_widget.delete(ending_point)
 
         # Set new ending marker
-        ending_point = map_widget.set_marker(*coordinates_tuple, text="Clickino", marker_color_outside="red", text_color="red", marker_color_circle="red")
+        ending_point = map_widget.set_marker(*coordinates_tuple, text="Stop", marker_color_outside="red", text_color="black", marker_color_circle="red")
 
     elif app_state == State.INTERMEDIATE:
         # Set new intermediate marker
@@ -198,25 +198,5 @@ if __name__ == "__main__":
 
     interaction_frame.columnconfigure(0, weight=1)
     interaction_frame.rowconfigure((0,1), weight=1)
-
-    # # Text selection
-    # text_frame = LabelFrame(root_tk, text = "Text Selection", width=SCREEN_WIDTH, height=SCREEN_HEIGHT*0.4, bg="white", borderwidth = 0, highlightthickness = 0)
-    # text_frame.pack(pady=20, anchor="w")
-
-    # start_label = Label(text_frame, text="Start Road")
-    # start_label.grid(row = 0, column = 0)
-    # start_entry = Entry(text_frame, bd =5)
-    # start_entry.grid(row = 0, column = 1)
-
-    # end_label = Label(text_frame, text="End Road")
-    # end_label.grid(row = 1, column = 0)
-    # end_entry = Entry(text_frame, bd =5)
-    # end_entry.grid(row = 1, column = 1)
-
-    # button = Button(interaction_frame, text="Clear", command=clearMarkers)
-    # button.grid(row=1, column=0, padx=10, pady=10)
-
-    # button = Button(interaction_frame, text="Submit", command=submit)
-    # button.grid(row=1, column=1, padx=10, pady=10)
 
     root_tk.mainloop()
