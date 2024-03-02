@@ -37,6 +37,10 @@ if __name__ == "__main__":
         end_location_formatted = "{},{}".format(args.end[0], args.end[1])
         # TODO: INTERMEDIATE LOCATIONS
 
+        start_location = (args.start[1], args.start[0])
+        end_location = (args.end[1], args.end[0])
+        intermediate_locations = [(p[1], p[0]) for p in args.intermediate] if args.intermediate else []
+
         graph_name = re.sub(r'[^\w_. -]', '_', f"{start_location_formatted.lower().strip()}-{end_location_formatted.lower().strip()}")
         print(f"Finding route from {start_location_formatted} to {end_location_formatted}")
         
@@ -54,7 +58,7 @@ if __name__ == "__main__":
             "room": args.websocket_room
         })
         
-        route_dir = route2vel.find_route_osrm([start_location_formatted, end_location_formatted], load_graph=True, load_graph_name=graph_name)
+        route_dir = route2vel.find_route_osrm([start_location, *intermediate_locations, end_location], load_graph=True, load_graph_name=graph_name)
         print("Route found: {}".format(route_dir))
         time.sleep(5)
         ws_client.emit("update", {
@@ -73,7 +77,7 @@ if __name__ == "__main__":
 
         ws_client.disconnect()
     except Exception as e:
-        print(ws_client)
+        print(e)
         ws_client.emit("route_error", {
             "message": "Errore nella ricerca del percorso...",
             "room": args.websocket_room
