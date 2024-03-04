@@ -50,6 +50,8 @@ class RichDirection(Direction):
         """
         node_ids = []
         for route_leg in self._raw['routes'][0]['legs']:
+            # print("Analyzing route leg {}".format(route_leg))
+            # print("Route leg annotation nodes: {}".format(route_leg['annotation']['nodes']))
             node_ids.extend([int(id) for id in route_leg['annotation']['nodes']])
 
         if self.graph:
@@ -62,6 +64,7 @@ class RichDirection(Direction):
         assert self.graph is not None
 
         if self.gdf is None or recalc:
+            # print("ORIGINAL ROUTE OSRM: {}".format(self._raw))
             self.gdf = route_to_gdf(self.graph, self.nodelist(), **routegdfargs)
             if rich_elevation:
                 self.gdf = add_elevation_to_gdf_geometry(self.gdf)

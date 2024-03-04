@@ -1,12 +1,17 @@
 import re
 import sys
+import os
+import io
 import time
 import argparse
 import route2vel
 import socketio
 import traceback
+import contextily as cx
+import matplotlib.pyplot as plt
 
-from route2vel.postprocess import calc_curvature
+from geopandas import GeoDataFrame
+from route2vel.postprocess import calc_curvature, interp_gdf_to_csv
 
 
 parser = argparse.ArgumentParser(description="Route2Vel is a tool to find routes between points and extract velocity profiles")
@@ -16,13 +21,24 @@ parser.add_argument("--intermediate", metavar=("lat", "lon"), type=float, nargs=
 parser.add_argument("--sampling", metavar="d", type=int, default=5, help="Sampling distance in meters")
 parser.add_argument("--websocket", metavar="host", type=str, default="http://localhost:7777", help="Websocket host to send updates to")
 parser.add_argument("--websocket-room", metavar="room", type=str, help="Websocket room to send updates to")
+parser.add_argument("--output-dir", metavar="dir", type=str, default=r"C:\Users\alexc\Desktop\Universita\PhD\Projects\route2vel\output", help="Output directory for csv and images")
+
+
+def generate_image(gdf: GeoDataFrame, save_path: str):
+    gdf = gdf.to_crs(epsg=3857)
+    # gdf = gdf.set_geometry("geometry2d")
+    buffer = io.BytesIO()
+    fig, ax = plt.subplots(figsize=(25, 15))
+    gdf.plot(ax=ax)
+    cx.add_basemap(ax, attribution_size=0, source=cx.providers.OpenStreetMap.Mapnik)
+    fig.savefig(buffer, format='png', bbox_inches='tight')
+    fig.savefig(save_path, format='png', bbox_inches='tight')
+    buffer.seek(0)
+    return buffer.read()
 
 
 if __name__ == "__main__":
-    args = parser.parse_args() 
-    # Namespace(start=[44.0, 11.0], end=[44.2, 11.2], intermediate=None, sampling=5)
-    # Namespace(start=[44.0, 11.0], end=[44.2, 11.2], intermediate=[[44.3, 11.3]], sampling=5)
-    # Namespace(start=[44.0, 11.0], end=[44.2, 11.2], intermediate=[[44.3, 11.3], [44.4, 11.4]], sampling=5)
+    args = parser.parse_args()
     
     # Connect to websocket
     ws_client = socketio.SimpleClient()
@@ -39,8 +55,6 @@ if __name__ == "__main__":
         # Find route
         start_location_formatted = "{},{}".format(args.start[0], args.start[1])
         end_location_formatted = "{},{}".format(args.end[0], args.end[1])
-        # TODO: INTERMEDIATE LOCATIONS
-
         start_location = (args.start[1], args.start[0])
         end_location = (args.end[1], args.end[0])
         intermediate_locations = [(p[1], p[0]) for p in args.intermediate] if args.intermediate else []
@@ -56,16 +70,16 @@ if __name__ == "__main__":
             "message": "Ricerca percorso...",
             "room": args.websocket_room
         })
-        time.sleep(5)
+        time.sleep(1)
         
         route_dir = route2vel.find_route_osrm([start_location, *intermediate_locations, end_location], load_graph=True, load_graph_name=graph_name)
-        print("Route found: {}".format(route_dir))
-        
+
         ws_client.emit("update", {
             "message": "Interpolazione percorso...",
             "room": args.websocket_room
         })
         interp_dir = route2vel.interp_from_route(route_dir)
+        print("Route found: {}".format(route_dir.gdf.head()))
 
         route2vel.utils.debug = True
         sampled_gdf = interp_dir.get_points_with_density(
@@ -77,6 +91,31 @@ if __name__ == "__main__":
         calc_curvature(sampled_gdf)
         sampled_points = [[sh_point.x, sh_point.y, sh_point.z] for sh_point in sampled_gdf["geometry"].tolist()]
 
+        csv_path = os.path.join(args.output_dir, "route_output_full.csv")
+
+        ws_client.emit("update", {
+            "message": "Generazione CSV...",
+            "room": args.websocket_room
+        })
+        # time.sleep(1)
+
+        interp_gdf_to_csv(
+            sampled_gdf, csv_path, 
+            separate_roundabout=True if 'junction' in interp_dir.split_gdf.columns else False,  #XXX: fix juncture missing, 
+            add_tract_start_col=True, 
+            extra_cols=['speed_kph', 'curvature'],
+        )
+
+        ws_client.emit("update", {
+            "message": "Generazione immagini...",
+            "room": args.websocket_room
+        })
+        # time.sleep(1)
+
+        route_img = generate_image(route_dir.gdf, os.path.join(args.output_dir, "route.png"))
+        split_img = generate_image(interp_dir.split_gdf, os.path.join(args.output_dir, "route_interp.png"))
+        sample_img = generate_image(sampled_gdf, os.path.join(args.output_dir, "sampled_route.png"))
+
         time.sleep(5)
         ## Send all the results
         ws_client.emit("route_data", {
@@ -84,6 +123,7 @@ if __name__ == "__main__":
             "length": route_dir.distance,
             "duration": route_dir.duration,
             "coords": route_dir.geometry,
+            "geojson": route_dir.gdf.drop("geometry2d", axis=1).to_json(),
             "room": args.websocket_room
         })
 
@@ -93,6 +133,13 @@ if __name__ == "__main__":
             "room": args.websocket_room
         })
 
+        # ws_client.emit('route_data', {
+        #     "type": "images",
+        #     'route_img': route_img,
+        #     'split_img': split_img,
+        #     'sample_img': sample_img,
+        #     "room": args.websocket_room
+        # })
         time.sleep(1)
 
         ws_client.disconnect()

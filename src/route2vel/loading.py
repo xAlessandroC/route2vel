@@ -106,11 +106,22 @@ def download_graph(
         raw_fn = None
 
     if not graph:
+        # Set OSM filter explicitly to handle specific road types - we do not want to include service roads
+        osm_filters = (
+            f'["highway"]["area"!~"yes"]'
+            # f'["access"!~"private"]'
+            f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
+            f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
+            f'steps|track"]'
+            f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
+            # f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
+        )
+
         # Create the graph of the area from OSM data. It will download the data and create the graph
         print(f"Downloading graph for {area} ...")
         time1 = time.time()
-        graph = ox.graph_from_place(area, network_type=network_type, simplify=False) if type(area) == str \
-            else ox.graph_from_bbox(*area, network_type=network_type, simplify=False)
+        graph = ox.graph_from_place(area, network_type=network_type, simplify=False, custom_filter=osm_filters) if type(area) == str \
+            else ox.graph_from_bbox(*area, network_type=network_type, simplify=False, custom_filter=osm_filters)
         time2 = time.time()
         print(f"Downloaded in {time2 - time1:.2f}s!")
 
@@ -229,6 +240,7 @@ def add_elevation(graph: nx.MultiDiGraph, method:str=None, api_key:str=None):
             # As seen [here](https://www.opentopodata.org/#public-api), the
             # open topo data Public API is restricted to 1call/second, 100 locations/call,
             # 1000 calls/day
+            # COMMENT: OPENTOPODATA API (change to local one with cache?)
             graph = _add_node_elevations_google(
                 graph, 
                 url_template='https://api.opentopodata.org/v1/aster30m?locations={}&key={}', 
