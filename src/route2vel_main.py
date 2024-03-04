@@ -1,8 +1,10 @@
 import re
+import sys
 import time
 import argparse
 import route2vel
 import socketio
+import traceback
 
 from route2vel.postprocess import calc_curvature
 
@@ -58,7 +60,7 @@ if __name__ == "__main__":
         
         route_dir = route2vel.find_route_osrm([start_location, *intermediate_locations, end_location], load_graph=True, load_graph_name=graph_name)
         print("Route found: {}".format(route_dir))
-
+        
         ws_client.emit("update", {
             "message": "Interpolazione percorso...",
             "room": args.websocket_room
@@ -74,7 +76,6 @@ if __name__ == "__main__":
         )
         calc_curvature(sampled_gdf)
         sampled_points = [[sh_point.x, sh_point.y, sh_point.z] for sh_point in sampled_gdf["geometry"].tolist()]
-        print(sampled_points)
 
         time.sleep(5)
         ## Send all the results
@@ -96,7 +97,8 @@ if __name__ == "__main__":
 
         ws_client.disconnect()
     except Exception as e:
-        print(e)
+        time.sleep(1)
+        print(traceback.format_exc(), file=sys.stderr)
         ws_client.emit("route_error", {
             "message": "Errore nella ricerca del percorso...",
             "room": args.websocket_room
