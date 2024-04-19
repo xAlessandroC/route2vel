@@ -14,3 +14,5 @@ route_output_full.csv
 resources/contextily_cache/**
 resources/md5/**
 resources/**.tmp
+
+tasks/*
