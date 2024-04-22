@@ -59,7 +59,6 @@ if __name__ == "__main__":
     time.sleep(1)
 
     try:
-
         # Find route
         start_location_formatted = "{},{}".format(args.start[0], args.start[1])
         end_location_formatted = "{},{}".format(args.end[0], args.end[1])
@@ -135,6 +134,8 @@ if __name__ == "__main__":
             eng.close()
         except Exception as e:
             print("Error in matlab invocation: ", traceback.format_exc())
+            with open(os.path.join(args.output_dir, "matlab_stacktrace.txt"), "w") as stacktrace_file:
+                print(f"{traceback.format_exc()}", file=stacktrace_file)
         #XXX: end din_pipeline
 
         # time.sleep(5)
@@ -184,5 +185,21 @@ if __name__ == "__main__":
             print(f"End coord: {end_location}", file=param_file)
             print(f"Intermediate: {intermediate_locations}", file=param_file)
             print(f"Sampling frequency: {args.sampling}", file=param_file)
+    except Exception as e:
+        print("Error saving parameter file")
+
+    try:
+        nodelist = route_dir.nodelist()
+        node_ids = []
+        for route_leg in route_dir._raw['routes'][0]['legs']:
+            node_ids.extend([int(id) for id in route_leg['annotation']['nodes']])
+        with open(os.path.join(args.output_dir, "debug.txt"), "w") as param_file:
+            print(f"Nodes OSRM: {node_ids}", file=param_file)
+            print(f"Nodes OSM (Filtered): {nodelist}", file=param_file)
+            print(f"Comparison:\n {nodelist[:-1]} {nodelist[1:]}", file=param_file)
+            for edge in route_dir.graph.edges(keys=True):
+                print("{}".format(edge),file=param_file)
+
+
     except Exception as e:
         print("Error saving parameter file")
