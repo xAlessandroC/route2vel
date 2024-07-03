@@ -33,7 +33,11 @@ for i = 1:length(vectVdes)
             a_des(i) = alfa(i) - beta(i)*vectVdes(i-1)/3.6;
         elseif strcmp(B_attributo(i),'ing_curva')
             d_des(i) = -(1.757 - 0.222*log(R(i+1)));
-            a_des(i) = alfa(i) - beta(i)*vectVdes(i-1)/3.6;
+            if i == 1
+                a_des(i) = alfa(i);
+            else
+                a_des(i) = alfa(i) - beta(i)*vectVdes(i-1)/3.6;
+            end
         elseif strcmp(B_attributo(i),'ing_dosso')
             a_des(i) = alfa(i) - beta(i)*vectVdes(i-1)/3.6;
             if vectVdes(i)/3.6 < 1.8
@@ -150,5 +154,72 @@ for i = 1:length(vectVdes)
             end 
         end
 end
+
+while any(Lta + Ltd >= l+1)
+% while not(all(Lta + Ltd <= l+1) && all((Ltd)>=zeros(1,238)) && all((Lta)>=zeros(1,238)))
+    
+    for i = 1:length(vectVdes)
+        
+        if Lta(i)+Ltd(i) > l(i)
+            if Ltd(i) == 0
+                if strcmp(A_attributo(i),'partenza') || strcmp(A_attributo(i),'stop') || strcmp(A_attributo(i),'ing_rotonda')
+                    Vstar(i) = 3.6*sqrt(2*a_star(i)*l(i));
+                else
+                    Vstar(i) = 3.6*sqrt((Vdes(i-1)/3.6)^2 + 2*a_star(i)*l(i));
+                end
+                Vdes(i) = Vstar(i);
+                v_up = Vdes(i+1)/3.6;
+                v_down = Vstar(i)/3.6;
+                Lta(i+1) = (v_up^2 - v_down^2)/2/a_star(i+1);
+                Lta(i) = l(i);
+            elseif Lta(i) == 0
+                if strcmp(B_attributo(i),'stop') || strcmp(B_attributo(i),'ing_rotonda')
+                    Vstar(i) = 3.6*sqrt(2*abs(d_star(i))*l(i));
+                else
+                    Vstar(i) = 3.6*sqrt((Vdes(i+1)/3.6)^2 + 2*abs(d_star(i))*l(i));
+                end
+                Vdes(i) = Vstar(i);
+                v_up = Vdes(i-1)/3.6;
+                v_down = Vstar(i)/3.6;
+                Ltd(i-1) = (v_up^2 - v_down^2)/2/abs(d_star(i-1));
+                Ltd(i) = l(i);
+            else
+                if strcmp(A_attributo(i),'partenza') || strcmp(A_attributo(i),'stop') || strcmp(A_attributo(i),'ing_rotonda') 
+                    vdec = 0;
+                else 
+                    vdec = Vdes(i-1)/3.6;
+                end
+                if strcmp(B_attributo(i),'stop') || strcmp(B_attributo(i),'ing_rotonda')
+                    vacc = 0;
+                else
+                    vacc = Vdes(i+1)/3.6;
+                end
+                Vstar(i) = 3.6*sqrt((2*a_star(i)*abs(d_star(i))*l(i)+abs(d_star(i))*vdec^2+a_star(i)*vacc^2)/(a_star(i)+abs(d_star(i))));
+                Vdes(i) = Vstar(i);
+                v_up = Vstar(i)/3.6;
+%                 Lta_star(i) = (v_up^2 - vdec^2)/2/a(i);
+%                 Ltd_star(i) = (v_up^2 - vacc^2)/2/abs(d(i));
+                Lta(i) = (v_up^2 - vdec^2)/2/a_star(i);
+                Ltd(i) = (v_up^2 - vacc^2)/2/abs(d_star(i));
+                if Ltd(i) < 0
+                    Vstar(i) = 3.6*sqrt((vdec)^2 + 2*a_star(i)*l(i));
+                    Vdes(i) = Vstar(i);
+                    Vdes(i+1) = Vstar(i);
+                    v_up = Vstar(i)/3.6;
+                    Lta(i) = (v_up^2 - vdec^2)/2/a_star(i);
+                    Ltd(i) = 0;
+                elseif Lta(i) < 0
+                    Vstar(i) = 3.6*sqrt((vacc)^2 + 2*abs(d_star(i))*l(i));
+                    Vdes(i) = Vstar(i);
+                    Vdes(i-1) = Vstar(i);
+                    v_up = Vstar(i)/3.6;
+                    Lta(i) = 0;
+                    Ltd(i) = (v_up^2 - vacc^2)/2/abs(d_star(i));
+                end
+            end
+        end
+    end  
+end
+
 
 end

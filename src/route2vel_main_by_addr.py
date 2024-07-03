@@ -21,9 +21,9 @@ from route2vel.postprocess import calc_curvature, interp_gdf_to_csv
 
 
 parser = argparse.ArgumentParser(description="Route2Vel is a tool to find routes between points and extract velocity profiles")
-parser.add_argument("--start", metavar=("lat", "lon"), type=float, nargs=2, required=True, help="Starting location (lat, lon)")
-parser.add_argument("--end", metavar=("lat", "lon"), type=float, nargs=2, required=True, help="Ending location (lat, lon)")
-parser.add_argument("--intermediate", metavar=("lat", "lon"), type=float, nargs=2, action="append", help="Intermediate location (lat, lon) - 0 or more")
+parser.add_argument("--start", metavar="startAddr", type=str, required=True, help="Star address")
+parser.add_argument("--end", metavar="endAddr", type=str, required=True, help="End address")
+parser.add_argument("--intermediate", metavar="address", type=str, action="append", help="Intermediate address  - 0 or more")
 parser.add_argument("--sampling", metavar="d", type=int, default=5, help="Sampling distance in meters")
 parser.add_argument("--websocket", metavar="host", type=str, default="http://localhost:8080", help="Websocket host to send updates to")
 parser.add_argument("--websocket-room", metavar="room", type=str, help="Websocket room to send updates to")
@@ -60,11 +60,11 @@ def generate_eleimage(gdf: GeoDataFrame, save_path: str):
     buffer.seek(0)
     return buffer.read()
 
-
+#XXX: osrm was capable of handling addresses also.. this dedicated script may not be necessary
 if __name__ == "__main__":
-    args = parser.parse_args()
-    print(args)
 
+    args = parser.parse_args()
+    print(args)    
     # Check output dir
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
@@ -91,11 +91,11 @@ if __name__ == "__main__":
         acceleration_phase_end = -1
 
         # Find route
-        start_location_formatted = "{},{}".format(args.start[0], args.start[1])
-        end_location_formatted = "{},{}".format(args.end[0], args.end[1])
-        start_location = (args.start[1], args.start[0])
-        end_location = (args.end[1], args.end[0])
-        intermediate_locations = [(p[1], p[0]) for p in args.intermediate] if args.intermediate else []
+        start_location_formatted = args.start
+        end_location_formatted = args.end
+        start_location = args.start
+        end_location = args.end
+        intermediate_locations = [p for p in args.intermediate] if args.intermediate else []
 
         graph_name = re.sub(r'[^\w_. -]', '_', f"{start_location_formatted.lower().strip()}-{end_location_formatted.lower().strip()}")
         print(f"Finding route from {start_location_formatted} to {end_location_formatted}")
@@ -104,8 +104,8 @@ if __name__ == "__main__":
         #     'start': True,
         # })
 
-        ws_client.emit("update", {
-            "message": "Ricerca percorso...",
+        ws_client.emit("update_by_addr", {
+            "message": f"Ricerca percorso...",
             "room": args.websocket_room
         })
         time.sleep(1)
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         #     print("Route found: {}".format(route_dir))
         #     print("Nodelist: {}".format(route_dir.nodelist()))
 
-        ws_client.emit("update", {
+        ws_client.emit("update_by_addr", {
             "message": "Interpolazione percorso...",
             "room": args.websocket_room
         })
@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
         csv_path = os.path.join(args.output_dir, "route_output_full.csv")
 
-        ws_client.emit("update", {
+        ws_client.emit("update_by_addr", {
             "message": "Generazione CSV...",
             "room": args.websocket_room
         })
@@ -158,7 +158,7 @@ if __name__ == "__main__":
             extra_cols=['speed_kph', 'curvature'],
         )
 
-        ws_client.emit("update", {
+        ws_client.emit("update_by_addr", {
             "message": "Generazione immagini...",
             "room": args.websocket_room
         })
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         #XXX: end din_pipeline
 
         ## Send all the results
-        ws_client.emit("route_data", {
+        ws_client.emit("route_data_by_addr", {
             "type": "route",
             "length": route_dir.distance,
             "duration": route_dir.duration,
@@ -197,7 +197,7 @@ if __name__ == "__main__":
             "room": args.websocket_room
         })
 
-        ws_client.emit("route_data", {
+        ws_client.emit("route_data_by_addr", {
             "type": "sampling",
             "coords": latlon_sampled_points,
             "room": args.websocket_room
@@ -209,7 +209,7 @@ if __name__ == "__main__":
             if svg_file.endswith(".svg"):
                 print("Sending {}".format(svg_file))
                 with open(os.path.join(args.output_dir, svg_file), "r") as svg_f:
-                    ws_client.emit("route_data", {
+                    ws_client.emit("route_data_by_addr", {
                         "type": "image",
                         "name": svg_file,
                         "data": svg_f.read(),
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     except Exception as e:
         time.sleep(1)
         print(traceback.format_exc(), file=sys.stderr)
-        ws_client.emit("route_error", {
+        ws_client.emit("route_error_by_addr", {
             "message": "Errore nella ricerca del percorso...",
             "room": args.websocket_room
         })

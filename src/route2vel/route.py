@@ -7,6 +7,9 @@ import geopandas as gpd
 from dataclasses import dataclass, field
 from shapely import LineString, Point
 import routingpy
+import time
+import os
+from pathlib import Path
 
 from .classes import RichDirection
 from .loading import load_graph
@@ -32,7 +35,11 @@ def find_route_osrm(
         router (optional): *routingpy* router to run directions with. Defaults to `routingpy.OSRM(base_url='http://localhost:5000')`.
     """
     route_coords = [ox.geocode(loc)[::-1] if type(loc) == str else loc for loc in route_steps]
+    start = time.time()
     osrm_route = RichDirection(router.directions(route_coords, profile=route_profile, annotations=True), ox_graph, load_graph_name)
+    end = time.time()
+    with open(os.path.join(Path(os.path.abspath(__file__)).parent.parent.parent, "tasks", "temp.txt"), "w") as f:
+        print(f"{end - start}", file=f)
 
     if load_graph:
         osrm_route.get_graph(True, **loadgraphargs)

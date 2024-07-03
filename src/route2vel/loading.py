@@ -12,6 +12,7 @@ import pickle
 from warnings import warn
 import numpy as np
 from tqdm import tqdm
+from pathlib import Path
 
 # used in rework on add elevation function
 from osmnx.elevation import _downloader, InsufficientResponseError, _elevation_request
@@ -60,6 +61,9 @@ def load_graph(area: str|tuple[float],
             graph = ox.load_graphml(fn)
         time2 = time.time()
         print(f"Loaded in {time2 - time1:.2f}s!")
+        with open(os.path.join(Path(os.path.abspath(__file__)).parent.parent.parent, "tasks", "temp.txt"), "a") as f:
+            print(f"{time2 - time1}", file=f)
+            print(f"{time2 - time1}", file=f)
         return graph
     else:
         return download_graph(area, 
@@ -123,7 +127,9 @@ def download_graph(
         graph = ox.graph_from_place(area, network_type=network_type, simplify=False, custom_filter=osm_filters) if type(area) == str \
             else ox.graph_from_bbox(*area, network_type=network_type, simplify=False, custom_filter=osm_filters)
         time2 = time.time()
-        print(f"Downloaded in {time2 - time1:.2f}s!")
+        print(f"Downloaded OSM map in {time2 - time1}s!")
+        with open(os.path.join(Path(os.path.abspath(__file__)).parent.parent.parent, "tasks", "temp.txt"), "a") as f:
+            print(f"{time2 - time1}", file=f)
 
         if keep_raw_copy:
             if save_with_pickle:
@@ -173,7 +179,13 @@ def fill_graph_data(
     (graph, missing_edges) = fill_geometry(graph, return_missing=True) if geometry else (graph, None)
 
     if elevation:
+        import time as tm
+        start = tm.time()
         graph = add_elevation(graph, ele_method, ele_api_key)
+        end = tm.time()
+        print(f"Added elevation in {end - start}s")
+        with open(os.path.join(Path(os.path.abspath(__file__)).parent.parent.parent, "tasks", "temp.txt"), "a") as f:
+            print(f"{end - start}", file=f)
         if grades:
             graph = ox.add_edge_grades(graph, abs_grades)
             logdebug(f"Added edge grades")
@@ -243,9 +255,9 @@ def add_elevation(graph: nx.MultiDiGraph, method:str=None, api_key:str=None):
             # COMMENT: OPENTOPODATA API (change to local one with cache?)
             graph = _add_node_elevations_google(
                 graph, 
-                url_template='https://api.opentopodata.org/v1/aster30m?locations={}&key={}', 
-                max_locations_per_batch=100,
-                pause=1,
+                url_template='http://localhost:5005/v1/test-dataset?locations={}', #XXX: was 'https://api.opentopodata.org/v1/aster30m?locations={}&key={}'
+                max_locations_per_batch=1000, #XXX: was 100
+                pause=0.1, #XXX: was 1
                 api_key=api_key,
             )
     except KeyError:

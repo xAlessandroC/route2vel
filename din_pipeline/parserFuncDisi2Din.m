@@ -53,7 +53,8 @@ plot3(rx,ry,rz,'k')
 saveas(disi, fullfile(base_folder, 'disi_dato_filtrato.png'))
 save_name = fullfile(base_folder, 'disi_dato_filtrato_v2.svg');
 set(gcf,'PaperPositionMode','auto')
-print(save_name,'-dsvg')
+%print(save_name,'-dsvg')
+print(gcf, save_name, '-dsvg')
 
 %%Calculate&Store: Organize linear road sections according to their
 %%horizontal grade
@@ -69,7 +70,8 @@ for i = 1:length(B_index)
         ind2 = B_index(i);
     end
     
-    if strcmp(A{ind1,4},'curve') && (ind2-ind1) < 17
+%     if strcmp(A{ind1,4},'curve') && (ind2-ind1) < 17
+    if strcmp(A{ind1,4},'curve') && (ind2-ind1) < 5
         for j = ind1:ind2
             A{j,4} = 'line';
         end
@@ -130,9 +132,11 @@ plot3(rx,ry,rz,'k')
 saveas(din, fullfile(base_folder, 'din_dato_semi_filtrato.png'))
 save_name = fullfile(base_folder, 'din_dato_semi_filtrato_v2.svg');
 set(gcf,'PaperPositionMode','auto')
-print(save_name,'-dsvg')
+%print(save_name,'-dsvg')
+print(gcf, save_name, '-dsvg')
 
-B_index = find(diff(index_type));
+% B_index = find(diff(index_type));
+B_index = [find(diff(index_type)) size(A,1)];
 k = 0;
 k_sum = 0;
 for i = 1:length(B_index)
@@ -156,7 +160,7 @@ for i = 1:length(B_index)
         for j = tmp_index+2:B_index(i)
              y_star = m*rx(j) + q;
              e_star(j) = abs(y_star - ry(j)); 
-             if e_star(j) < 80
+             if e_star(j) < 20
                  k = k;
              else
                  r_mat_order(5:7,i+k_sum+k) = [rx(j-1); ry(j-1); rz(j-1)];
@@ -207,7 +211,24 @@ for i = 1:size(r_mat_order,2)
     Ax = [r_mat_order(2,i), r_mat_order(5,i)];
     Ay = [r_mat_order(3,i), r_mat_order(6,i)];
     Az = [r_mat_order(4,i), r_mat_order(7,i)];
-    l(i) = sqrt(diff(Ax)^2 + diff(Ay)^2 + diff(Az)^2);
+    
+    l_tmp = 0;
+    if i ~= size(r_mat_order,2)
+        for j = r_mat_order(1,i):(r_mat_order(1,i+1)-1)     
+            Ax_ = [rx(j), rx(j+1)];
+            Ay_ = [ry(j), ry(j+1)];
+            l_tmp = l_tmp + sqrt(diff(Ax_)^2 + diff(Ay_)^2);
+        end
+    else
+        for j = r_mat_order(1,i):size(A,1)-1     
+            Ax_ = [rx(j), rx(j+1)];
+            Ay_ = [ry(j), ry(j+1)];
+            l_tmp = l_tmp + sqrt(diff(Ax_)^2 + diff(Ay_)^2);
+        end
+    end
+    l(i) = l_tmp;
+    
+%     l(i) = sqrt(diff(Ax)^2 + diff(Ay)^2 + diff(Az)^2);
     G(i) = (diff(Az))/l(i);
     th(i) = atan2(diff(Ay)/l(i),diff(Ax)/l(i));
     if i ~=size(r_mat_order,2) && strcmp(A{r_mat_order(1,i+1),4},'roundabout')
@@ -308,5 +329,6 @@ end
 saveas(din, fullfile(base_folder, 'din_dato_filtrato.png'))       
 save_name = fullfile(base_folder, 'din_dato_filtrato_v2.svg');
 set(gcf,'PaperPositionMode','auto')
-print(save_name,'-dsvg')
+%print(save_name,'-dsvg')
+print(gcf, save_name, '-dsvg')
 end

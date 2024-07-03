@@ -16,3 +16,5 @@ resources/md5/**
 resources/**.tmp
 
 tasks/*
+*.png
+*.pdf

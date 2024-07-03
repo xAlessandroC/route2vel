@@ -4,6 +4,7 @@ import numpy as np
 import networkx as nx
 from shapely import Point, LineString
 import sys
+import time
 from pyproj import Transformer, CRS
 
 from .utils import get_utm_zone, logdebug
@@ -50,9 +51,18 @@ class RichDirection(Direction):
         """
         node_ids = []
         for route_leg in self._raw['routes'][0]['legs']:
-            # print("Analyzing route leg {}".format(route_leg))
-            # print("Route leg annotation nodes: {}".format(route_leg['annotation']['nodes']))
-            node_ids.extend([int(id) for id in route_leg['annotation']['nodes']])
+            # BUG FIX
+            # Successive route_legs['annotation']['nodes'] can have the same first nodes as the previous ones
+            # Example
+            # A: [1, 2, 3, 4, 5]
+            # B: [4, 5, 6, 7]
+            # In this case 4 and 5 must be taken only once, since they refer to the same piece of route
+            nodes = route_leg['annotation']['nodes']
+            i = 0
+            for i in range(len(node_ids) - 1, -1, -1):
+                if node_ids[i:] == nodes[:len(node_ids)-i]:
+                    break
+            node_ids.extend(nodes[len(node_ids)-i:])
 
         if self.graph:
             node_ids = list(filter(lambda id: id in self.graph.nodes, node_ids))
@@ -191,6 +201,7 @@ class InterpolatingDirection(Direction):
         else:
             points: np.ndarray = get_points_output
                         
+        degree_points = points
         if in_meters:
             if meters_utm_zone is None:
                 points_average = np.array([line.centroid.coords[0] for line in self.split_gdf.geometry]).mean(axis=0)
@@ -217,6 +228,7 @@ class InterpolatingDirection(Direction):
             gdf = GeoDataFrame({
                 'geometry': [Point(pt) for pt in points],
             }, geometry='geometry', crs=crs)
+            gdf["latlong_coords"] = [Point(pt) for pt in degree_points]
             if gdf_unwrap_points:
                 points_t = points.transpose()
                 gdf['lon'] = points_t[0]

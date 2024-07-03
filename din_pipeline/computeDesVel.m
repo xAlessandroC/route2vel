@@ -3,9 +3,10 @@ function [Vdes, ratio, alfa, beta] = computeDesVel(attributo,A_attributo,B_attri
 if strcmp(attributo,'tangente')
     ratio = Vlim/3.6;
     if Vlim > 50
-        beta = -1/20*log(1-(60/3.6)/ratio);
+%         beta = -1/20*log(1-(60/3.6)/ratio);
+        beta = -1/20*log(1-((Vlim-10)/3.6)/ratio);
     else
-        beta = -1/15*log(1-(35/3.6)/ratio);
+        beta = -1/15*log(1-(25/3.6)/ratio);
     end
     alfa = ratio*beta;
     if Vlim > 50
@@ -21,7 +22,7 @@ if strcmp(attributo,'tangente')
     end
 elseif strcmp(attributo,'intersezione')
     ratio = Vlim/3.6;
-    beta = -1/15*log(1-(35/3.6)/ratio);
+    beta = -1/15*log(1-(25/3.6)/ratio);
     alfa = ratio*beta;
     if strcmp(A_attributo,'ing_rotonda')
         fprintf('ing_rotonda\n');
@@ -33,7 +34,7 @@ elseif strcmp(attributo,'intersezione')
         fprintf('value is %d obtained at time %d \n',Vdes, now);
         fprintf('value after division is %d \n',(Vdes/3.6));
         if (Vdes/3.6)^2/R > an_lim
-            Vdes = sqrt(an_lim*R);
+            Vdes = 3.6*sqrt(an_lim*R);
         end
     elseif strcmp(A_attributo,'rotonda')
         if l > 80
@@ -42,7 +43,7 @@ elseif strcmp(attributo,'intersezione')
             Vdes = kr*(0.33*l + 42.71);
         end
         if (Vdes/3.6)^2/R > an_lim
-            Vdes = sqrt(an_lim*R);
+            Vdes = 3.6*sqrt(an_lim*R);
         end
     elseif strcmp(A_attributo,'ing_stop')
         if l > 67
@@ -63,12 +64,12 @@ elseif strcmp(attributo,'intersezione')
     end 
 elseif strcmp(attributo,'strada')
     ratio = Vlim/3.6;
-    beta = -1/15*log(1-(35/3.6)/ratio);
+    beta = -1/15*log(1-(25/3.6)/ratio);
     alfa = ratio*beta;
     Vdes = 50; 
 elseif strcmp(attributo,'curva')
     ratio = Vlim/3.6;
-    beta = -1/15*log(1-(35/3.6)/ratio);
+    beta = -1/15*log(1-(25/3.6)/ratio);
     alfa = ratio*beta;
     if CCR < 30 && R > 200 && R < 2500
         Vdes = kc*(80 - 563/sqrt(R));
@@ -82,7 +83,7 @@ elseif strcmp(attributo,'curva')
         Vdes = kc*40;
     end   
     if (Vdes/3.6)^2/R > an_lim
-        Vdes = sqrt(an_lim*R);
+        Vdes = 3.6*sqrt(an_lim*R);
     end
  
 end
