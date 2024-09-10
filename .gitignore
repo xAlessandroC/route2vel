@@ -18,3 +18,5 @@ resources/**.tmp
 tasks/*
 *.png
 *.pdf
+*.gz
+indexes/
