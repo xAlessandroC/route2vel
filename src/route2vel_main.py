@@ -18,6 +18,9 @@ from shapely import Point, LineString
 from pathlib import Path
 from geopandas import GeoDataFrame
 from route2vel.postprocess import calc_curvature, interp_gdf_to_csv
+import logging
+
+
 
 
 parser = argparse.ArgumentParser(description="Route2Vel is a tool to find routes between points and extract velocity profiles")
@@ -77,7 +80,7 @@ if __name__ == "__main__":
     ws_client.emit("join", {
         "room": args.websocket_room
     })
-    time.sleep(1)
+    # time.sleep(1)
 
     try:
         # Stats vars
@@ -108,7 +111,7 @@ if __name__ == "__main__":
             "message": "Ricerca percorso...",
             "room": args.websocket_room
         })
-        time.sleep(1)
+        # time.sleep(1)
 
         osrm_phase_start = time.time()
         route_dir = route2vel.find_route_osrm([start_location, *intermediate_locations, end_location], load_graph=True, load_graph_name=graph_name)
@@ -164,10 +167,10 @@ if __name__ == "__main__":
         })
         # time.sleep(1)
 
-        route_img = generate_image(route_dir.gdf, os.path.join(args.output_dir, "route.pdf"))
-        split_img = generate_image(GeoDataFrame({'geometry': [Point(pt) for pt in route_dir.geometry]}, geometry='geometry', crs=route_dir.gdf.crs), os.path.join(args.output_dir, "nodelist.pdf"))
-        sample_img = generate_image(sampled_gdf, os.path.join(args.output_dir, "sampled_route.pdf"))
-        sample_eleimg = generate_eleimage(sampled_gdf, os.path.join(args.output_dir, "sampled_eleroute.pdf"))
+        # route_img = generate_image(route_dir.gdf, os.path.join(args.output_dir, "route.pdf"))
+        # split_img = generate_image(GeoDataFrame({'geometry': [Point(pt) for pt in route_dir.geometry]}, geometry='geometry', crs=route_dir.gdf.crs), os.path.join(args.output_dir, "nodelist.pdf"))
+        # sample_img = generate_image(sampled_gdf, os.path.join(args.output_dir, "sampled_route.pdf"))
+        # sample_eleimg = generate_eleimage(sampled_gdf, os.path.join(args.output_dir, "sampled_eleroute.pdf"))
 
 
         #XXX: add matlab invocation
@@ -215,8 +218,8 @@ if __name__ == "__main__":
                         "data": svg_f.read(),
                         "room": args.websocket_room
                     })
-                    time.sleep(1)
-        time.sleep(1)
+                    # time.sleep(1)
+        time.sleep(10)
 
         ws_client.disconnect()
     except Exception as e:

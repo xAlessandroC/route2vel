@@ -164,10 +164,10 @@ if __name__ == "__main__":
         })
         # time.sleep(1)
 
-        route_img = generate_image(route_dir.gdf, os.path.join(args.output_dir, "route.pdf"))
-        split_img = generate_image(GeoDataFrame({'geometry': [Point(pt) for pt in route_dir.geometry]}, geometry='geometry', crs=route_dir.gdf.crs), os.path.join(args.output_dir, "nodelist.pdf"))
-        sample_img = generate_image(sampled_gdf, os.path.join(args.output_dir, "sampled_route.pdf"))
-        sample_eleimg = generate_eleimage(sampled_gdf, os.path.join(args.output_dir, "sampled_eleroute.pdf"))
+        # route_img = generate_image(route_dir.gdf, os.path.join(args.output_dir, "route.pdf"))
+        # split_img = generate_image(GeoDataFrame({'geometry': [Point(pt) for pt in route_dir.geometry]}, geometry='geometry', crs=route_dir.gdf.crs), os.path.join(args.output_dir, "nodelist.pdf"))
+        # sample_img = generate_image(sampled_gdf, os.path.join(args.output_dir, "sampled_route.pdf"))
+        # sample_eleimg = generate_eleimage(sampled_gdf, os.path.join(args.output_dir, "sampled_eleroute.pdf"))
 
 
         #XXX: add matlab invocation
@@ -203,7 +203,7 @@ if __name__ == "__main__":
             "room": args.websocket_room
         })
 
-        # Send all the results svgs
+        # Send all the generated svgs
         # XXX: armir-ale timeout send
         for svg_file in os.listdir(args.output_dir):
             if svg_file.endswith(".svg"):
@@ -216,7 +216,22 @@ if __name__ == "__main__":
                         "room": args.websocket_room
                     })
                     time.sleep(1)
-        time.sleep(1)
+        time.sleep(10)
+
+        # Send all the identified wc datasets
+        # XXX: armir-ale timeout send
+        for wc_file in os.listdir(args.output_dir):
+            if wc_file.endswith(".csv"):
+                print("Sending {}".format(wc_file))
+                with open(os.path.join(args.output_dir, wc_file), "r") as wc_f:
+                    ws_client.emit("route_wc_data_by_addr", {
+                        "type": "image",
+                        "name": wc_file,
+                        "data": wc_f.read(),
+                        "room": args.websocket_room
+                    })
+                    time.sleep(1)
+        time.sleep(10)
 
         ws_client.disconnect()
     except Exception as e:

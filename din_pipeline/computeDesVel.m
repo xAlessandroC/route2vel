@@ -25,14 +25,11 @@ elseif strcmp(attributo,'intersezione')
     beta = -1/15*log(1-(25/3.6)/ratio);
     alfa = ratio*beta;
     if strcmp(A_attributo,'ing_rotonda')
-        fprintf('ing_rotonda\n');
         if l > 80
             Vdes = kr*50;
         else
             Vdes = kr*(0.58*l + 30.61);
         end
-        fprintf('value is %d obtained at time %d \n',Vdes, now);
-        fprintf('value after division is %d \n',(Vdes/3.6));
         if (Vdes/3.6)^2/R > an_lim
             Vdes = 3.6*sqrt(an_lim*R);
         end

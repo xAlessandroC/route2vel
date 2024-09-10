@@ -50,8 +50,8 @@ for i = 1:n
     end
 end
 plot3(rx,ry,rz,'k')
-saveas(disi, fullfile(base_folder, 'disi_dato_filtrato.png'))
-save_name = fullfile(base_folder, 'disi_dato_filtrato_v2.svg');
+
+save_name = fullfile(base_folder, 'disi_dato_filtrato.svg');
 set(gcf,'PaperPositionMode','auto')
 %print(save_name,'-dsvg')
 print(gcf, save_name, '-dsvg')
@@ -129,8 +129,8 @@ for i = 1:n
 
 end
 plot3(rx,ry,rz,'k')
-saveas(din, fullfile(base_folder, 'din_dato_semi_filtrato.png'))
-save_name = fullfile(base_folder, 'din_dato_semi_filtrato_v2.svg');
+
+save_name = fullfile(base_folder, 'din_dato_semi_filtrato.svg');
 set(gcf,'PaperPositionMode','auto')
 %print(save_name,'-dsvg')
 print(gcf, save_name, '-dsvg')
@@ -160,7 +160,7 @@ for i = 1:length(B_index)
         for j = tmp_index+2:B_index(i)
              y_star = m*rx(j) + q;
              e_star(j) = abs(y_star - ry(j)); 
-             if e_star(j) < 20
+             if e_star(j) < 5
                  k = k;
              else
                  r_mat_order(5:7,i+k_sum+k) = [rx(j-1); ry(j-1); rz(j-1)];
@@ -326,8 +326,8 @@ for i = 1:size(r_mat_order,2)
     end
     
 end  
-saveas(din, fullfile(base_folder, 'din_dato_filtrato.png'))       
-save_name = fullfile(base_folder, 'din_dato_filtrato_v2.svg');
+ 
+save_name = fullfile(base_folder, 'din_dato_filtrato.svg');
 set(gcf,'PaperPositionMode','auto')
 %print(save_name,'-dsvg')
 print(gcf, save_name, '-dsvg')

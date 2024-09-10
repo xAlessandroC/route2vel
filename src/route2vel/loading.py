@@ -114,12 +114,21 @@ def download_graph(
         osm_filters = (
             f'["highway"]["area"!~"yes"]'
             # f'["access"!~"private"]'
-            f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
+            f'["highway"!~"abandoned|bridleway|bus_guideway|corridor|cycleway|elevator|'
             f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
             f'steps|track"]'
             f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
             # f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
         )
+
+        # osm_filters = (
+        #     f'["access"!~"no|agricultural|forestry|emergency|psv|customers|private|delivery|destination"]'
+        #     f'["highway"]["access"!~"private"]'
+        #     f'["service"!~"emergency_access"]'
+        #     f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
+        #     f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
+        #     f'steps|track"]'
+        # )
 
         # Create the graph of the area from OSM data. It will download the data and create the graph
         print(f"Downloading graph for {area} ...")
