@@ -21,7 +21,7 @@ from route2vel.postprocess import calc_curvature, interp_gdf_to_csv
 import logging
 
 
-
+os.environ['REQUESTS_CA_BUNDLE'] = ''
 
 parser = argparse.ArgumentParser(description="Route2Vel is a tool to find routes between points and extract velocity profiles")
 parser.add_argument("--start", metavar=("lat", "lon"), type=float, nargs=2, required=True, help="Starting location (lat, lon)")
